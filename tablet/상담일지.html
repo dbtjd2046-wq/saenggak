@@ -385,17 +385,10 @@
   .block textarea::placeholder{color:var(--g400);font-weight:500;}
 
   /* 회기 평가 슬라이더(모니터링 14 패턴) */
-  .sl-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px;}
-  .sl-val{font-size:15px;font-weight:700;color:var(--green700);}
-  .sl-val.empty{color:var(--g400);font-weight:500;}
+  /* 회기 평가 눈금 라벨. 2026-09-07 유성 "권장대로" — 척도가 `input[type=range]`에서 `.seg` 탭 타깃으로 바뀌며
+     `.sl-top`/`.sl-val`과 range 스타일 11줄은 소비자 0이 되어 지웠다(§4.9 "이산 1–5 = 탭 타깃"). 숫자는 칸에 있으니
+     여기선 방향만 말한다(옛 「1 낮음 / 5 높음」은 버튼이 이미 말하는 값을 반복 — §2.1-7). */
   .scale-label{display:flex;justify-content:space-between;font-size:12px;color:var(--g500);margin-top:2px;}
-  input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:30px;background:transparent;outline:none;margin:4px 0;cursor:pointer;}
-  input[type=range]::-webkit-slider-runnable-track{height:6px;background:var(--g200);border-radius:99px;}
-  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:26px;height:26px;margin-top:-10px;border-radius:50%;background:#fff;border:3px solid var(--g300);box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:grab;}
-  input[type=range].touched::-webkit-slider-thumb{border-color:var(--green);}
-  input[type=range]::-moz-range-track{height:6px;background:var(--g200);border-radius:99px;}
-  input[type=range]::-moz-range-thumb{width:26px;height:26px;border-radius:50%;background:#fff;border:3px solid var(--g300);box-shadow:0 1px 4px rgba(0,0,0,.2);cursor:grab;}
-  input[type=range].touched::-moz-range-thumb{border-color:var(--green);}
 
   /* 회기 카드 삭제(X) */
   .client-card .cc-main{flex:1;min-width:0;}
@@ -749,9 +742,9 @@
     </div>
 
     <div class="block">
-      <div class="sl-top"><label class="blabel" style="margin:0;">회기 평가</label><span class="sl-val empty" id="gw-score-val">선택 안 함</span></div>
-      <input id="gw-score" type="range" min="1" max="5" step="1" value="3">
-      <div class="scale-label"><span>1 낮음</span><span>5 높음</span></div>
+      <label class="blabel">회기 평가 <span class="opt">고르면 좋아요</span></label>
+      <div class="seg" id="gw-score"></div>
+      <div class="scale-label"><span>낮음</span><span>높음</span></div>
       <textarea id="gw-opinion" class="sm" placeholder="평가 소견 (선택)"></textarea>
     </div>
 
@@ -1822,15 +1815,20 @@ function renderTags(){
     box.appendChild(b);
   });
 }
-// 회기 평가 = 1~5 슬라이더(선택). 안 만지면 ""(선택 안 함), 만지면 그 값. (모니터링 14 패턴)
+// 회기 평가 = 1~5 **탭 타깃**(선택). 안 고르면 ""(=아무 칸도 안 켜짐), 같은 칸을 다시 누르면 해제.
+// 2026-09-07 유성 "권장대로" — 옛 네이티브 range를 걷어냈다. 이유 셋: ⓐ§4.9 "이산 1–5 = 탭 타깃, 슬라이더 X"(원칙엔
+// "적용: 상담일지 평가척도"라고 적혀 있었는데 실물만 안 따라와 있었다) ⓑ5칸을 순간이동해 끌리지 않았다(14와 같은 병)
+// ⓒ**안 골랐는데 썸이 3에 앉아 '3 고름'처럼 보였다** — 그래서 "썸 자리를 탭하면 input이 안 뜬다"는 우회까지 달려 있었다.
+// 탭 타깃은 셋을 한꺼번에 없앤다(안 고름 = 아무 칸도 안 켜짐). 문법·컴포넌트는 바로 아래 위험 신호 `.seg`와 동일.
 function setScoreUI(){
-  const sl=$("gw-score"), val=$("gw-score-val");
-  if(gScore===""){ sl.value=3; sl.classList.remove("touched"); val.textContent="선택 안 함"; val.classList.add("empty"); }
-  else { sl.value=gScore; sl.classList.add("touched"); val.textContent=gScore+" / 5"; val.classList.remove("empty"); }
+  const box=$("gw-score"); box.innerHTML="";
+  for(let i=1;i<=5;i++){
+    const b=document.createElement("button"); b.type="button";
+    b.className=(String(i)===gScore?"on":""); b.textContent=i;
+    b.onclick=()=>{ gScore=(gScore===String(i)?"":String(i)); setScoreUI(); };
+    box.appendChild(b);
+  }
 }
-$("gw-score").addEventListener("input",()=>{ gScore=String($("gw-score").value); setScoreUI(); });
-// 썸이 이미 있는 위치(가운데 3)를 탭하면 input이 안 떠 값이 안 잡히는 문제 → 누르는 순간 현재값을 확정.
-$("gw-score").addEventListener("pointerdown",()=>{ if(gScore===""){ gScore=String($("gw-score").value); setScoreUI(); } });
 function renderRisk(){
   const box=$("gw-risk"); box.innerHTML="";
   RISK_OPTS.forEach(o=>{
