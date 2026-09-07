@@ -452,6 +452,8 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
   #schedSheet .tmrow button{flex:1;height:28px;border:0;border-radius:8px;background:var(--danger-weak-bg);color:var(--danger-weak-fg);
      font-family:inherit;font-size:10.5px;font-weight:700;cursor:pointer;transition:transform .12s}
   #schedSheet .tmrow button:active{transform:scale(.96)}
+  /* 오탭 방어(유성 09-07) — 블록을 눌러 펼친 손가락 자리에 이 버튼이 오므로, 펼친 직후 450ms는 안 눌린다 */
+  #schedSheet .blk.open.arming .tmrow button{pointer-events:none;opacity:.45}
   #schedSheet .tmrow .who{flex:none;align-self:center;font-size:10px;color:var(--g600);font-weight:600;max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
   /* 빈자리 — 시간 한 줄만(유성 08-16 "이동 12분 빼고 안 써도 돼") · --g500(비텍스트 3:1 하한) */
   #schedSheet .free{position:absolute;left:3px;right:3px;border:1px dashed var(--g200);border-radius:3px;
@@ -3239,6 +3241,7 @@ function _findChildByRow(row) {
 
 // ── 중앙 확인 다이얼로그(§4.4) — 크롬 confirm() 대체(유성 2026-08-10). 파괴적 액션이면 danger=true(우측 버튼 빨강) ──
 var _cmEl = null, _cmOk = null;
+var _cmShownAt = 0;
 function iwConfirm(title, sub, okLabel, danger, onOk) {
   if (!_cmEl) {
     _cmEl = document.createElement('div');
@@ -3248,14 +3251,16 @@ function iwConfirm(title, sub, okLabel, danger, onOk) {
       + '<button class="cm-btn primary" id="cmGo"></button></div></div>';
     document.body.appendChild(_cmEl);
     document.getElementById('cmClose').addEventListener('click', function(){ _cmEl.classList.remove('show'); _cmOk = null; });
-    document.getElementById('cmGo').addEventListener('click', function(){ _cmEl.classList.remove('show'); var f = _cmOk; _cmOk = null; if (f) f(); });
+    document.getElementById('cmGo').addEventListener('click', function(){
+      if (Date.now() - _cmShownAt < 400) return;   // 오탭 방어 — 뜨자마자 떨어진 탭(직전 탭의 잔상)은 확인이 아니다
+      _cmEl.classList.remove('show'); var f = _cmOk; _cmOk = null; if (f) f(); });
   }
   _cmEl.querySelector('.cm-t').textContent = title;
   _cmEl.querySelector('.cm-s').textContent = sub || '';
   var go = document.getElementById('cmGo');
   go.textContent = okLabel || '확인';
   go.classList.toggle('danger', !!danger);
-  _cmOk = onOk;
+  _cmOk = onOk; _cmShownAt = Date.now();
   _cmEl.classList.add('show');
 }
 
@@ -5854,6 +5859,12 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     // ⛔격자 아래 요약 텍스트는 쓰지 않는다 (유성 08-15)
     body.innerHTML=h;
     // 태그 자동 제거(유성 09-06) — 렌더로 잰다(계산 아님): 태그가 이름에 …를 만들면 뺀다, 태그를 빼도 잘리면(4자 이름) 태그를 되살린다
+    // 오탭 방어 — 펼친 직후 450ms는 종결 버튼을 잠근다(같은 자리를 두 번 누르는 손가락). CSS .arming
+    var ob = body.querySelector('.blk.open');
+    if (ob && SCHED.openedAt && Date.now() - SCHED.openedAt < 450) {
+      ob.classList.add('arming');
+      setTimeout(function(){ ob.classList.remove('arming'); }, 450 - (Date.now() - SCHED.openedAt));
+    }
     body.querySelectorAll('.blk:not(.open) .st').forEach(function(st){
       var bk = st.parentNode, nm = bk.querySelector('.nm'); if (!nm) return;
       if (nm.scrollWidth <= nm.clientWidth) return;
@@ -6204,7 +6215,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   window.addEventListener('resize', function(){ if (CAND.key) { candFit(); candFade(); } });
 
   // ── 전역 노출 (onclick·훅용) ──────────────────────────────────────
-  window.scTap = function(i){ SCHED.open = (SCHED.open===i? null : i); paint(); };
+  window.scTap = function(i){ SCHED.open = (SCHED.open===i? null : i); SCHED.openedAt = (SCHED.open===null) ? 0 : Date.now(); paint(); };
   window.scFx = function(i){
     var r = RL[i], k = gkey(r.d, r.g);
     if (CAND.key === k) { candClose(); paint(); return; }     // 같은 칸 두 번 = 닫기
@@ -6221,6 +6232,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
      서버 terminate(07 H열 + 06 Q·S·T 비움 + R='종결' + 로그) → 실패면 원상복구. 배정취소(doUnassign)와 같은 3단.
      ⚠️ 대기로 되돌리지 않는다 — 서버도 waiting에 안 담으므로 낙관 객체와 서버 응답이 일치(_renderSig). */
   window.scTerm = function(e,i,mi,kind){ e.stopPropagation();
+    if (SCHED.openedAt && Date.now() - SCHED.openedAt < 450) return;   // 펼친 직후의 두 번째 탭 — 종결로 읽지 않는다
     var v = RL[i].g[0].mem[mi||0], prov = SCHED.prov;
     if (!v.row) { showToast('이 서비스 탭 신청폼에 행이 없는 아이라 여기서는 종결할 수 없어요'); return; }
     iwConfirm(v.n + ' — ' + kind + '로 처리할까요?', '서류철 종결에 적고 ' + (prov||'') + ' 선생님 배정을 풀어요. 다시 신청하면 대기로 돌아와요.', kind + ' 처리', true, function(){
