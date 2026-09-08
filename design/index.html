@@ -469,6 +469,40 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 .ag-sub2 li::before{content:"·";position:absolute;left:-13px;color:var(--g400);font-weight:700}
 .sheet.ag .btn{width:100%;margin-top:14px}
 .sheet.ag .lk{display:block;margin:16px auto 0}   /* 동의 버튼과 간격 넉넉히(유성) */
+/* out 버튼(「다음에 하기」) = 09 `.s-later` 실값이 정본(§4.16) — 전폭·15px·600·g500·패딩 14.
+   공용 `.lk`는 500이라 여기서만 맞춘다(§5.3 텍스트형 데모는 .lk 그대로). */
+.sheet.ag .lk{width:100%;font-size:15px;font-weight:600;color:var(--g500);padding:14px;margin:4px 0 0}
+
+/* ══ 22 접수 폼에서 복제한 컴포넌트들(실코드=scripts/22_추천서/Index.html — 값 임의 변경 금지) ══ */
+.dmo-ease{--ease:cubic-bezier(.22,.85,.25,1)}
+/* §4.13-7 카드 라벨 — 초록 번호 + 부탁하는 문장 + 핵심어만 볼드 */
+.qt{font-size:16px;font-weight:500;color:var(--g700);margin:0 0 14px;line-height:1.5}
+.qt .num{color:var(--green);font-weight:800;margin-right:5px}
+.qt .qk{font-weight:700;color:var(--g900)}
+/* §4.1-13 "선택" 꼬리 = g300(본문 하한 밖이지만 의도된 약함) */
+.optl{font-size:12.5px;font-weight:500;color:var(--g300);margin-left:6px}
+/* §4.1-12 생각을 적는 칸 = 테두리+연회색 채움, 예시 없음 */
+.ta{width:100%;font:inherit;font-size:16px;line-height:1.6;color:var(--g900);border:1px solid var(--g200);
+  border-radius:12px;background:var(--g50);padding:14px;min-height:92px;resize:none;outline:none;
+  transition:border-color .15s,background .15s}
+.ta:focus{border-color:var(--green);background:#fff}
+.dmo-lb{display:block;font-size:13.5px;font-weight:600;color:var(--g500);margin:0 0 6px}
+/* §4.9 양극 7점 = 알약 세그 + 미끄러지는 흰 필 + 양끝 글자 커짐 */
+.pends{display:flex;justify-content:space-between;align-items:baseline;height:32px;margin-bottom:8px;padding:0 6px}
+.pends span{font-weight:700;color:var(--g400);font-size:14px;transition:font-size .22s var(--ease),color .22s}
+.pseg{display:flex;background:var(--g100);border-radius:999px;padding:4px;position:relative;touch-action:none;cursor:pointer}
+.pseg button{flex:1 1 0;min-width:0;height:44px;border:none;background:transparent;border-radius:999px;
+  pointer-events:none;position:relative;z-index:1;display:flex;align-items:center;justify-content:center}
+.pseg button i{border-radius:50%;background:var(--g300);width:var(--d);height:var(--d);transition:background .22s,transform .22s var(--ease)}
+.pseg button.on i{background:var(--green);transform:scale(1.15)}
+.pseg::before{content:'';position:absolute;top:4px;bottom:4px;left:0;width:var(--sw,0px);transform:translateX(var(--sx,0px));
+  background:#fff;border-radius:999px;box-shadow:0 1px 4px rgba(0,0,0,.12);
+  transition:transform .3s var(--ease),width .3s var(--ease),opacity .2s;opacity:var(--so,0)}
+.pseg.drag::before{transition:opacity .2s;box-shadow:0 2px 8px rgba(0,0,0,.16)}   /* 드래그 중엔 즉시 추종, 놓으면 .3s 스냅 */
+.lk-val{text-align:center;font-size:13px;color:var(--g600);margin-top:6px;min-height:20px}
+/* §2.1-10 이름 조사 — 입력해 보는 칸 */
+.josa-out{margin-top:12px;font-size:15px;color:var(--g700)}
+.josa-out b{color:var(--green-dark);font-weight:700}
 </style>
 </head>
 <body>
@@ -488,6 +522,7 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec2"><i>§1.8</i><span>디자인 검토·제안 = 프리뷰 html로</span></a>
     <a href="#sec3"><i>§2.1</i><span>보이스 &amp; 톤</span></a>
     <a href="#sec4"><i>§2.1 예외</i><span>기본값을 의도적으로 어길 때</span></a>
+    <a href="#sec52"><i>§2.1-10</i><span>아이 이름에 붙는 조사 = 성 떼고 받침으로</span></a>
     <a href="#sec5"><i>§2.2</i><span>정보 밀도는 맥락에 맞춘다</span></a>
     <a href="#sec6"><i>§2.2-4</i><span>반복 실무자 화면 = 미니멀 + 보조설명은 ? 시트</span></a>
     <a href="#sec7"><i>§2.2-5</i><span>조작법은 텍스트가 아니라 어포던스로</span></a>
@@ -526,6 +561,8 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <a href="#sec40"><i>§4.9</i><span>비활성 1차 CTA는 숨기지 않는다</span></a>
     <a href="#sec41"><i>§4.9</i><span>값이 바뀌어도 컨트롤은 안 움직인다</span></a>
     <a href="#sec42"><i>§4.9</i><span>눈금 슬라이더 = 손가락 즉시 추종 + 놓으면 스냅</span></a>
+    <a href="#sec53"><i>§4.9</i><span>양극 7점 척도 = 알약 세그 + 양끝 글자 커짐</span></a>
+    <a href="#sec54"><i>§4.13-7</i><span>카드 라벨 = 명사가 아니라 부탁하는 문장</span></a>
     <a href="#sec43"><i>§4.13-6</i><span>넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드</span></a>
     <a href="#sec44"><i>§4.13-6</i><span>그린 그라디언트로 “더 있다”를 말한다</span></a>
     <a href="#sec45"><i>§4.9</i><span>다중 선택 그리드 = 드래그 + 이름 일괄토글 📱 실기기</span></a>
@@ -576,6 +613,17 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     <div class="col ok"><b>긍정형 → 부정 OK</b>정책 불가·일부 불가·안심: "수집하지 않아요"</div>
   </div>
   <p class="note">철자 — <code>되어요</code>가 아니라 <code>돼요</code>.</p>
+
+  <!-- 2026-09-06 · 경위·전문 = docs/1 §2.1-10 -->
+  <h3 class="sec" id="sec52"><span class="ref">§2.1-10</span>아이 이름에 붙는 조사 = 성 떼고 받침으로</h3>
+  <p class="desc">「아이의」로 얼버무리지 않는다. 성을 떼고 마지막 글자에 받침이 있으면 <b>이</b>를 끼운다. 이름을 쳐 보세요 ↓</p>
+  <div class="demo">
+    <div class="tfield" style="margin-bottom:0">
+      <label for="josaIn">아이 이름</label>
+      <div class="tin-wrap"><input id="josaIn" placeholder="김하린"></div>
+    </div>
+    <div class="josa-out" id="josaOut">김하린 → <b>하린이의</b> 평소 모습을 적어주세요 · 호칭 <b>하린이</b></div>
+  </div>
 
   <h3 class="sec" id="sec5"><span class="ref">§2.2</span>정보 밀도는 맥락에 맞춘다</h3>
   <p class="desc">반복해서 쓰는 화면은 줄이고, 처음 오는 화면은 안심 문구를 남긴다.</p>
@@ -823,6 +871,16 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
       <div class="fl"><label>생년월일</label><div class="inw"><input inputmode="numeric" placeholder="생년월일" data-ph-up="0000. 00. 00"><button class="clr" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
     </div>
   </div>
+  <!-- 2026-09-06 · 경위·전문 = docs/1 §4.1-12·§4.1-13 -->
+  <p class="desc" style="margin-top:16px"><span class="ref sub">§4.1-12</span>생각을 적는 칸은 <b>테두리+연회색 채움</b>, <b>예시는 넣지 않는다</b> — 넣으면 그대로 베껴 적는다.</p>
+  <p class="desc" style="margin-top:-8px"><span class="ref sub">§4.1-13</span>「선택」 꼬리표는 <code>--g300</code> — 읽으라는 글자가 아니라 안 적어도 된다는 힌트다.</p>
+  <div class="demo">
+    <label class="dmo-lb" for="taDemo">정서</label>
+    <textarea class="ta" id="taDemo"></textarea>
+    <label class="dmo-lb" for="taDemo2" style="margin-top:16px">언어와 인지<span class="optl">선택</span></label>
+    <textarea class="ta" id="taDemo2"></textarea>
+  </div>
+
   <h3 class="sec" id="sec25"><span class="ref">§4.2-9</span>고정 길이 숫자 = 자동 다음 칸 이동</h3>
   <p class="desc">자릿수가 다 차면 다음 칸으로, 마지막 칸은 키패드를 닫는다. 11자리 채워 보세요 ↓</p>
   <div class="demo">
@@ -896,6 +954,8 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
 
   <h3 class="sec" id="sec30"><span class="ref">§4.3</span>바텀시트 — 드래그로 닫기</h3>
   <p class="desc">상단 핸들, 아래로 끌면 닫힘. <b>닫을 수 없는 시트엔 핸들을 달지 않는다.</b> 동작 데모 ↓</p>
+  <!-- 2026-09-08 · 경위·전문 = docs/1 §4.3-7 -->
+  <p class="note"><span class="ref sub">§4.3-7</span>순차 등장은 <b>항목까지</b> <code>will-change</code>로 레이어를 예약한다 — 시트만 하면 효과가 없다.</p>
   <div class="demo"><button class="btn" onclick="openSheet()">바텀시트 열기</button></div>
 
   <h3 class="sec" id="sec31"><span class="ref">§4.16</span>동의 바텀시트</h3>
@@ -1068,6 +1128,24 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   </div>
 
   <!-- 2026-07-29 · 경위·전문 = docs/1 §4.13-6 -->
+  <!-- 2026-09-07 · 경위·전문 = docs/1 §4.9 양극 7점 척도 -->
+  <h3 class="sec" id="sec53"><span class="ref">§4.9</span>양극 7점 척도 = 알약 세그 + 양끝 글자 커짐</h3>
+  <p class="desc">점수를 찍는 1~5는 탭 타깃 그대로. <b>"어느 쪽으로 얼마나"</b>를 묻는 양극 척도만 이렇게 — 기울어진 쪽 라벨이 커진다. 끌어 보세요 ↓</p>
+  <div class="demo dmo-ease">
+    <div class="pends" id="pends"><span>내성적</span><span>외향적</span></div>
+    <div class="pseg" id="pseg"></div>
+    <div class="lk-val" id="lkVal"></div>
+  </div>
+
+  <!-- 2026-09-06 · 경위·전문 = docs/1 §4.13-7 -->
+  <h3 class="sec" id="sec54"><span class="ref">§4.13-7</span>카드 라벨 = 명사가 아니라 부탁하는 문장</h3>
+  <p class="desc">초록 번호 + 문장 + <b>핵심어만 볼드</b>. 명사 라벨(「기본정보」)은 표의 것이고, 카드 머리는 부탁하는 문장이다.</p>
+  <div class="demo">
+    <div class="qt"><span class="num">1.</span>아이의 <span class="qk">기본 정보</span>를 적어주세요.</div>
+    <div class="qt"><span class="num">2.</span>아이의 <span class="qk">주소</span>를 적어주세요.</div>
+    <div class="qt" style="margin-bottom:0"><span class="num">3.</span><span class="qk">형제자매</span>가 있으면 적어주세요.</div>
+  </div>
+
   <h3 class="sec" id="sec43"><span class="ref">§4.13-6</span>넘치는 목록 = 스크롤바 숨기고 아래쪽 페이드</h3>
   <p class="desc">스크롤바를 숨기고(막대가 생기면 행 안 칩이 튄다) 아래쪽을 <b>투명도</b>로 옅게 — 어둡게가 아니다. 스크롤해 보세요 ↓</p>
   <div class="demo" style="max-width:360px">
@@ -1095,10 +1173,10 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
     #sfBody::-webkit-scrollbar{width:0;height:0}
     #sfDemo::before,#sfDemo::after{content:"";position:absolute;left:1px;right:1px;height:34px;
       pointer-events:none;opacity:0;transition:opacity .18s;z-index:2}
-    #sfDemo::before{top:0;background:linear-gradient(to top,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
-                               linear-gradient(to top,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%)}
-    #sfDemo::after{bottom:0;background:linear-gradient(to bottom,rgba(22,104,65,0) 0%,rgba(22,104,65,.055) 100%),
-                                 linear-gradient(to bottom,rgba(22,104,65,0) 58%,rgba(22,104,65,.115) 100%)}
+    /* 값을 복붙하지 않고 §3.1 정본 토큰을 쓴다 — --sf-top/--sf-bot이 2026-09-05에 정본으로 승격된 이유가
+       "provider-map·09가 각자 :root에 복붙한 이중 진실"이었는데, 정작 이 데모가 그 복붙을 남겨 두고 있었다(09-08 정리). */
+    #sfDemo::before{top:0;background:var(--sf-top)}
+    #sfDemo::after{bottom:0;background:var(--sf-bot)}
     #sfDemo.moreTop::before{opacity:1}
     #sfDemo.more::after{opacity:1}
   </style>
@@ -1182,7 +1260,13 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
       7월 27일 연차가 확정됐어요
     </div>
     <div style="display:inline-flex;align-items:center;gap:8px;background:var(--g800);color:#fff;font-size:13.5px;font-weight:600;border-radius:12px;padding:12px 18px">연결이 안 돼요. 다시 시도해 주세요</div>
+    <!-- 2026-09-04 · 경위·전문 = docs/1 §5.5 (06 지도 색 채움 토스트) -->
+    <div style="display:inline-flex;align-items:center;gap:8px;background:var(--green700);color:#fff;font-size:13.5px;font-weight:600;border-radius:12px;padding:12px 18px">
+      <span style="display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;background:#fff;flex:none"><svg viewBox="0 0 24 24" style="width:11px;height:11px;fill:none;stroke:var(--green700);stroke-width:3;stroke-linecap:round;stroke-linejoin:round"><polyline points="4 12 9 17 20 6"/></svg></span>
+      배정을 저장했어요
+    </div>
   </div>
+  <p class="note">바탕이 색 채움이면 원과 체크를 <b>뒤집는다</b> — 흰 원 + 그 바탕의 색. 초록 바탕에 초록 원은 면 대비 1.61로 녹아 사라진다.</p>
 
 </section>
 
@@ -1653,6 +1737,55 @@ if(solo) solo.addEventListener('click',()=>solo.classList.toggle('solo'));
   document.addEventListener('click',function(e){ if(!p.contains(e.target)&&e.target!==b) set(false); });
   document.addEventListener('keydown',function(e){ if(e.key==='Escape') set(false); });
 })();
+
+// ── §2.1-10 이름 조사 (22 접수 폼 givenName/hasBatchim/nameUi 복제 — 값 임의 변경 금지) ──
+(function(){
+  var inp=document.getElementById('josaIn'), out=document.getElementById('josaOut'); if(!inp||!out) return;
+  var SUR2=['남궁','제갈','황보','사공','선우','독고','서문','동방','어금','망절','소봉','등정','강전','장곡','무본'];
+  function givenName(full){ full=(full||'').trim().replace(/\s+/g,''); if(!full) return '';
+    if(full.length<=2) return full.slice(-1);
+    if(full.length>=4){ for(var i=0;i<SUR2.length;i++){ if(full.indexOf(SUR2[i])===0) return full.slice(2); } }
+    return full.slice(1); }
+  function hasBatchim(ch){ var c=ch.charCodeAt(0); if(c<0xAC00||c>0xD7A3) return false; return (c-0xAC00)%28!==0; }
+  function paint(){
+    var full=inp.value.trim()||'김하린', g=givenName(full);
+    if(!g){ out.textContent='이름을 적어 주세요'; return; }
+    var b=hasBatchim(g.charAt(g.length-1));
+    out.innerHTML=full+' → <b>'+g+(b?'이의':'의')+'</b> 평소 모습을 적어주세요 · 호칭 <b>'+g+(b?'이':'')+'</b>';
+  }
+  inp.addEventListener('input',paint); paint();
+})();
+
+// ── §4.9 양극 7점 알약 세그 (22 접수 폼 pseg 복제 — 드래그 즉시 추종 + 놓으면 스냅) ──
+(function(){
+  var wrap=document.getElementById('pseg'), val=document.getElementById('lkVal'); if(!wrap||!val) return;
+  var ends=document.querySelectorAll('#pends span'), N=7, btns=[];
+  var LABEL=['','매우 내성적','내성적','조금 내성적','중간','조금 외향적','외향적','매우 외향적'];
+  for(var i=1;i<=N;i++){ var b=document.createElement('button'); b.type='button'; b.tabIndex=-1;
+    b.innerHTML='<i style="--d:'+(6+Math.abs(i-4)*2)+'px"></i>'; b.dataset.v=i; wrap.appendChild(b); btns.push(b); }
+  function cellW(){ return (wrap.clientWidth-8)/N; }
+  function paintEnds(r){ var k=(r-.5)*2;
+    ends[0].style.fontSize=(14+Math.max(0,-k)*7)+'px'; ends[1].style.fontSize=(14+Math.max(0,k)*7)+'px';
+    ends[0].style.color = k<-.1 ? 'var(--green-dark)' : 'var(--g400)';
+    ends[1].style.color = k>.1 ? 'var(--green-dark)' : 'var(--g400)'; }
+  function pillTo(x){ wrap.style.setProperty('--sw', cellW()+'px'); wrap.style.setProperty('--sx', x+'px'); wrap.style.setProperty('--so', 1); }
+  function snap(v){ pillTo(4+(v-1)*cellW()); btns.forEach(function(b,i){ b.classList.toggle('on', i+1===v); }); paintEnds((v-1)/(N-1)); }
+  function set(v){ snap(v); val.textContent=LABEL[v]; }
+  function ratio(x){ var r=wrap.getBoundingClientRect(), w=cellW(); return Math.max(0, Math.min(1, (x-r.left-4-w/2)/(r.width-8-w))); }
+  var dragging=false;
+  function follow(e){ var r=ratio(e.clientX); pillTo(4+r*cellW()*(N-1)); paintEnds(r); btns.forEach(function(b){ b.classList.remove('on'); }); }
+  wrap.addEventListener('pointerdown',function(e){ dragging=true; wrap.classList.add('drag'); try{ wrap.setPointerCapture(e.pointerId); }catch(_){} follow(e); });
+  wrap.addEventListener('pointermove',function(e){ if(dragging) follow(e); });
+  function up(e){ if(!dragging) return; dragging=false; wrap.classList.remove('drag'); set(Math.round(ratio(e.clientX)*(N-1))+1); }
+  wrap.addEventListener('pointerup',up); wrap.addEventListener('pointercancel',up);
+  window.addEventListener('resize',function(){ if(val.textContent){ snap(LABEL.indexOf(val.textContent)); } else paintEnds(.5); });
+  paintEnds(.5);
+})();
+
+// ── §4.1-12 .ta 자동 확장 (예시 없음 — placeholder 두지 말 것) ──
+(function(){ document.querySelectorAll('textarea.ta').forEach(function(t){
+  function grow(){ t.style.height='auto'; t.style.height=Math.max(92,t.scrollHeight)+'px'; }
+  t.addEventListener('input',grow); grow(); }); })();
 </script>
 </body>
 </html>
