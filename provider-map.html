@@ -1241,6 +1241,7 @@ var CONFIG = {
 
 // ── 부팅 계측(?perf=1) — 어느 구간이 긴지 화면 좌하단에 표로. 평소엔 배열에 쌓기만(비용 0에 가깝다). 유성 09-06 로딩 라운드
 var _PERF_ON = /[?&]perf=1/.test(location.search);
+var BUILD = '2026-09-09b';   // ?perf=1 표 마지막 줄에 찍힌다 — 폰이 옛 판(CDN 10분 캐시)을 보고 있는지 가르는 용도. 배포마다 올린다
 function _perf(label){ try { window._pf.push([label, performance.now()]); if (_PERF_ON) _perfDraw(); } catch(e){} }
 function _perfDraw(){
   var box = document.getElementById('perfBox');
@@ -1253,6 +1254,9 @@ function _perfDraw(){
   var lines = window._pf.map(function(p){ return (Math.round(p[1]) + 'ms').padStart(8) + '  ' + p[0]; });
   if (html) lines.unshift((Math.round(html.responseEnd) + 'ms').padStart(8) + '  HTML 도착(' + Math.round((html.transferSize||0)/1024) + 'KB)');
   lines.push('폰트 ' + fontN + '개 ' + Math.round(fonts/1024) + 'KB' + (document.fonts && document.fonts.status === 'loaded' ? ' (완료)' : ' (로딩 중)'));
+  // ⓑ 진단 — 빌드·이 origin의 localStorage 총량·마지막 저장 결과(용량 초과면 여기서 드러난다)
+  var lsKB = 0; try { for (var i = 0; i < localStorage.length; i++) { var k = localStorage.key(i); lsKB += (k.length + (localStorage.getItem(k) || '').length); } } catch (e) {}
+  lines.push('빌드 ' + BUILD + ' · 저장소 ' + Math.round(lsKB/1024) + 'KB' + (window._mcStat ? ' · 저장분 ' + window._mcStat : ''));
   box.textContent = lines.join('\n');
 }
 if (_PERF_ON && document.fonts && document.fonts.ready) document.fonts.ready.then(function(){ _perf('폰트 완료'); });
@@ -1685,12 +1689,28 @@ function _mcKey(kind, extra){ return kind + '|' + MODE + '|' + currentService + 
 function _mcAll(){ try { return JSON.parse(localStorage.getItem(MAPCACHE_KEY) || '{}') || {}; } catch (e) { return {}; } }
 function _mcGet(key){ var e = _mcAll()[key]; if (!e || !e.d || (Date.now() - (e.t || 0)) > MAPCACHE_TTL) return null; return e.d; }
 function _mcPut(key, d){
+  var str = '';
   try {
     var all = _mcAll(); all[key] = { t: Date.now(), d: d };
-    var str = JSON.stringify(all);
+    str = JSON.stringify(all);
     if (str.length > 1500000) { all = {}; all[key] = { t: Date.now(), d: d }; str = JSON.stringify(all); }
-    localStorage.setItem(MAPCACHE_KEY, str);
-  } catch (e) { /* 용량·사생활 모드 — 저장 없이 옛 동작 */ }
+    try { localStorage.setItem(MAPCACHE_KEY, str); }
+    catch (e1) {   // 용량 초과 — 이 키만 남기고 한 번 더(다른 키·옛 판이 자리를 먹고 있을 수 있다)
+      localStorage.removeItem(MAPCACHE_KEY);
+      str = JSON.stringify((function(){ var o = {}; o[key] = { t: Date.now(), d: d }; return o; })());
+      localStorage.setItem(MAPCACHE_KEY, str);
+    }
+    window._mcStat = '저장 ' + key.split('|')[0] + ' ' + Math.round(str.length/1024) + 'KB';
+  } catch (e) { window._mcStat = '실패 ' + key.split('|')[0] + ' ' + ((e && e.name) || '') + ' ' + Math.round(str.length/1024) + 'KB'; }   // 사생활 모드·용량 — 저장 없이 옛 동작. ?perf=1이 보여 준다
+}
+/** 저장분을 못 쓴 이유(?perf=1 진단) */
+function _mcWhy(key){
+  var all = _mcAll(), ks = Object.keys(all);
+  if (!ks.length) return '(저장된 것 없음)';
+  var e = all[key];
+  if (!e) return '(다른 키만: ' + ks.map(function(k){ return k.split('|')[0]; }).join(',') + ')';
+  if ((Date.now() - (e.t || 0)) > MAPCACHE_TTL) return '(만료 ' + Math.round((Date.now() - e.t)/3600000) + 'h 전)';
+  return '(값 없음)';
 }
 function _mcClear(){ try { localStorage.removeItem(MAPCACHE_KEY); } catch (e) {} }
 
@@ -1784,6 +1804,7 @@ function loadAllProviders(keepView) {
   // ⓑ 저장분 먼저(부팅·서비스 전환). 쓰기 진행 중엔 안 쓴다 — 헬퍼 주석 참조
   var painted = false, mk = _mcKey('all'), saved = (_writesInFlight === 0) ? _mcGet(mk) : null;
   if (saved) { done(saved); painted = true; showLoading(false); _perf('저장분 마커 그리기'); }
+  else _perf('저장분 없음 ' + _mcWhy(mk));
   if (!painted) showLoading(true);
   fetchGAS('mapdata', {provider: '__ALL__', service: currentService}).then(function(data){
     if (!painted) showLoading(false);
@@ -1952,7 +1973,7 @@ function loadStaffMap(keepView){
   };
   // ⓑ 저장분 먼저(교사 저사양 폰이 이 경로 — 09-06 유성 피드백의 본체). 헬퍼 주석 참조
   var painted = false, mk = _mcKey('staff', s.staffId), saved = _mcGet(mk);
-  if (saved) { paint(saved); painted = true; _perf('저장분 마커 그리기'); } else showLoading(true);
+  if (saved) { paint(saved); painted = true; _perf('저장분 마커 그리기'); } else { _perf('저장분 없음 ' + _mcWhy(mk)); showLoading(true); }
   fetchGAS('staffmap', { service: currentService, staffId: s.staffId, session: s.session }).then(function(data){
     if (!painted) showLoading(false);
     if (data && data.error === 'auth'){   // 세션 만료·회수(퇴사) → 기본지도로 강등 + 재로그인 유도 (저장분도 clearStaffSess가 지운다)
