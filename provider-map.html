@@ -308,7 +308,7 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
      골격=#planSheet 복제(§4.3) · 격자=A 채움·56px/시간 고정·라운딩 0·동네색(시트 안 순서·bname).
      ⛔접힌 블록엔 '추정'·±N분 금지 / 빈자리에 "이동 N분 빼고" 금지 / 격자 아래 요약 텍스트 금지 (유성 08-15·16) */
   /* 폭 344 기본, **토요일 교사만 400**(유성 09-06 — 6열에선 1자 태그로도 이름이 잘려서). --sched-w는 paint()가 요일 수로 정한다(폰은 72%가 이겨 무변경) */
-  #schedSheet{position:absolute;right:12px;bottom:0;width:min(var(--sched-w,344px),72%);max-height:82%;z-index:8;
+  #schedSheet{position:absolute;right:12px;bottom:0;width:min(var(--sched-w,344px),72%);max-height:82%;z-index:42;   /* 범례(40) 위 — 유성 09-08 "월 스케줄이 범례를 가려도 돼" */
               display:none;flex-direction:column;background:#fff;border-radius:20px 20px 0 0;
               box-shadow:var(--sh-up);transform:translateY(100%);
               /* max-height도 같이 전환한다 — 후보 모달이 열릴 때 시트가 **툭 줄지 않고 부드럽게** 낮아진다
@@ -328,8 +328,12 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
      "한 행을 전부 차지하게 하지 말고" → fit-content·오른쪽 정렬, 좁으면 아랫줄로 내려간다.
      "숫자도 없애고" → 집계 없음.  "완전 원형의 세그필" → radius 999.
      margin-right = 헤더 padding(16) − 격자 padding(12) → 세그 오른끝이 아래 격자 오른끝과 맞는다. */
-  #schedSheet .shd{flex-wrap:wrap}
-  #schedSheet .shd .shdr{display:flex;align-items:flex-start;gap:8px;flex:none;margin-left:auto}
+  /* 09-08 유성: 세그는 **절대 아랫줄로 안 내려간다**("세그필은 세 줄로 내려오지 않도록 하는 게 중요해"). 제목·부제 한 묶음(nowrap)이 남는 폭을 먹고
+     세그가 오른쪽에 고정(위 z). 모자라면 세그가 제목 꼬리를 덮는다("4자 이름의 님이 가려져도 괜찮다"). 실측(프리뷰): 폰 gap 0·padding 7이면 360px 3종 4자도 안 덮인다(4px 여유). */
+  #schedSheet .shd{flex-wrap:nowrap;position:relative}
+  #schedSheet .shd > div:first-child{flex:1 1 auto;min-width:0;white-space:nowrap}
+  #schedSheet .shd > div:first-child h3,#schedSheet .shd > div:first-child .sub{white-space:nowrap;overflow:visible}
+  #schedSheet .shd .shdr{display:flex;align-items:flex-start;gap:8px;flex:none;margin-left:auto;position:relative;z-index:2}
   #schedSheet .svcseg{display:inline-flex;flex:none;margin-right:-4px;position:relative;isolation:isolate;
            background:var(--g100);border-radius:999px;padding:3px;gap:2px}
   /* 미끄러지는 필 한 장 (§4.5 2026-07-28 "딱 딱 바뀌면 인지를 못해").
@@ -362,8 +366,13 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
     pointer-events:none;opacity:0;transition:opacity .18s;z-index:2;
     background:var(--sf-top)}
   #schedSheet.moreTop::before{opacity:1}
-  #schedRouteBtn{border:1px solid var(--g200);border-radius:9px;background:#fff;color:var(--g700);
-    font-family:inherit;font-size:11.5px;font-weight:700;padding:6px 10px;cursor:pointer;flex:none}
+  /* 「동선」 = 후보 원 바로 위, 같은 세로줄(유성 09-08 — 헤더 안에 있을 땐 세그가 아랫줄로 밀렸고, 좌하단은 범례·블록과 겹쳤다).
+     현행 디자인 그대로(테두리·흰 채움·11.5px 700·radius 9) + 그림자만. 시트가 열려 있을 때만(.show — _fabShape가 켠다). .on = 동선 켜짐(검정) */
+  #schedRouteBtn{position:fixed;z-index:45;display:none;width:48px;height:30px;
+    right:calc(12px + min(var(--sched-w,344px),72%) + 10px);bottom:calc(16px + 48px + 10px);
+    border:1px solid var(--g200);border-radius:9px;background:#fff;color:var(--g700);box-shadow:var(--sh-fab);
+    font-family:inherit;font-size:11.5px;font-weight:700;padding:0;cursor:pointer;flex:none;align-items:center;justify-content:center}
+  #schedRouteBtn.show{display:flex}
   #schedRouteBtn.on{background:var(--g900);color:#fff;border-color:var(--g900)}
   #schedRouteBtn:active{transform:scale(.97)}
   /* 월 스케줄 버튼 = 우하단, 후보 배치안 옆 (2026-08-24 유성 — 옛 좌상단 알약은 "버튼은 왼쪽 위인데
@@ -912,6 +921,10 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
        (실측 165개 중 161개). 좌우 여백만 줄이면 37.4px가 되어 잘림이 7개(4글자 이상)로 떨어진다.
        세로는 안 건드린다 — 세로 넘침은 26명 265블록 전수 0이었다. */
     #schedSheet .blk{left:0;right:0;padding:5px 3px 3px}
+    /* 헤더 — 폰은 제목↔세그 gap 0, 세그 안 gap 0, 세그 padding 9→7 (유성 09-08). 360px 3종 4자 이름까지 한 줄 */
+    #schedSheet .shd{gap:0}
+    #schedSheet .svcseg{gap:0}
+    #schedSheet .svcseg button{padding:4px 7px}
     #schedSheet .blk.tight{padding:2px 3px 1px}
     #schedSheet .blk.open{padding:9px 10px 10px 11px}
     /* 📊·필터를 고정폭으로 두고 드롭다운이 남는 폭을 먹으면 셋이 한 줄에 들어간다(유성 09-02
@@ -1154,13 +1167,14 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
 
 <!-- ════ 월 스케줄 논모달 (2026-08-16 정식 병합 — 프리뷰 6라운드 확정판) ════ -->
 <button id="schedPill" onclick="schedPillTap()"><span class="full"></span><span class="mini">스케줄</span></button>
+<!-- 「동선」 — 시트 밖(시트는 transform이라 fixed 자식이 화면에 고정되지 않는다). 후보 원 바로 위 -->
+<button id="schedRouteBtn" onclick="schedRouteToggle()">동선</button>
 <div id="schedSheet">
   <div class="grab" id="schedGrab"><div class="bar"></div></div>
   <div class="shd">
     <div style="min-width:0"><h3 id="schedTitle"></h3><div class="sub" id="schedSub"></div></div>
     <!-- 우측 컨트롤 한 묶음 — 좁아지면 둘이 **같이** 아랫줄로 내려간다(따로 두면 동선만 밀려 헤더가 어긋난다) -->
     <div class="shdr">
-      <button id="schedRouteBtn" onclick="schedRouteToggle()">동선</button>
       <div class="svcseg" id="schedSeg"></div>
     </div>
   </div>
@@ -1778,18 +1792,39 @@ function loadAllProviders(keepView) {
   }).catch(function(e) { if (!painted) showLoading(false); showToast('로드 실패: '+e.message + (painted ? ' (화면은 지난번 저장분)' : '')); });
 }
 
-function updateProviderCounts(assigned) {
-  var counts = {};
-  if (assigned) assigned.forEach(function(a) {
-    var p = a.assignedTo || '';
-    counts[p] = (counts[p] || 0) + 1;
+/* 드롭다운 「(N명)」 = **월 스케줄과 같은 수**(유성 09-08 "배정완료 명수랑 결제 명수랑 달라서 0명 — 월 스케줄에 맞추는 게 맞겠다").
+   점유표(OCC.map = 6탭 S·T + 대장 역산, 07 종결 제외)에서 그 교사의 아이를 세되 월 스케줄과 같은 8주 무결제 컷(LIVE_DAYS)·이름+생년 중복 제거.
+   점유표가 아직 안 왔으면 배정(Q) 수로 두고, 도착하면(loadOccupancy) 다시 센다 — 부팅 병렬 1회라 로딩은 안 늘어난다.
+   이름 대조는 공백을 뺀 키로(제공인력 탭 이름의 앞뒤 공백이 Q·점유표 키와 달라 0명이 되던 것을 막는다). */
+function _provKey(n){ return String(n || '').replace(/\s+/g, ''); }
+function _occChildCounts() {
+  var out = {}, any = false;
+  Object.keys(OCC.map || {}).forEach(function(p){
+    var seen = {}, n = 0;
+    (OCC.map[p] || []).forEach(function(sl){
+      if (sl.src === 'recon' && sl.last != null && sl.last > (window.LIVE_DAYS || 56)) return;   // 월 스케줄 rows()와 같은 컷
+      var k = String(sl.n || '') + '|' + String(sl.dob || '').slice(0, 8);
+      if (!seen[k]) { seen[k] = 1; n++; }
+    });
+    out[_provKey(p)] = n; any = true;
   });
+  return any ? out : null;
+}
+function updateProviderCounts(assigned) {
+  var counts = _occChildCounts();
+  if (!counts) {
+    counts = {};
+    if (assigned) assigned.forEach(function(a) {
+      var p = _provKey(a.assignedTo);
+      counts[p] = (counts[p] || 0) + 1;
+    });
+  }
   var sel = document.getElementById('providerSelect');
   for (var i = 0; i < sel.options.length; i++) {
     var opt = sel.options[i];
     if (opt.value === '__ALL__' || !opt.value) continue;
     var name = opt.value;
-    var cnt = counts[name] || 0;
+    var cnt = counts[_provKey(name)] || 0;
     var clean = name.replace(/\s*\(\d+명\)$/, '');
     opt.textContent = clean + ' (' + cnt + '명)';
   }
@@ -2874,9 +2909,13 @@ var ASG_HOURS = [14,15,16,17,18,19];   // F3 — 최대 6열이 이 범위다(�
 // 받아 두면 다이얼로그를 열 때 왕복이 0이다([[gas-latency-is-roundtrip-count]]).
 // ⚠️ 이건 표시용 사본이라 낡을 수 있다 — **진짜 판정은 쓰기 직전 서버가 다시 한다**(사본을 믿고 막지 않는다).
 var OCC = { map: {}, unknown: {} };
+function _occRecount(){ if (currentData && _ctxKeyName() === '__ALL__') updateProviderCounts(currentData.assigned); }
 function loadOccupancy() {
+  // ⓑ 저장분 먼저(09-08) — 드롭다운 명수·격자가 부팅 즉시 선다. 서버 응답이 오면 덮는다
+  var ok = _mcKey('occ'), savedOcc = _mcGet(ok);
+  if (savedOcc && savedOcc.occupancy && !(OCC.map && Object.keys(OCC.map).length)) { OCC.map = savedOcc.occupancy; OCC.unknown = savedOcc.unknown || {}; schedRefresh(); _occRecount(); }
   return fetchGAS('occupancy').then(function(r) {
-    if (r && r.occupancy) { OCC.map = r.occupancy; OCC.unknown = r.unknown || {}; }
+    if (r && r.occupancy) { OCC.map = r.occupancy; OCC.unknown = r.unknown || {}; _mcPut(ok, { occupancy: r.occupancy, unknown: r.unknown || {} }); _occRecount(); }
     // 07 종결로 서버가 뺀 아이들(2026-09-06) — 실측용. 행정 콘솔에서 OCC.term으로 본다('초록 마커인데 종결인 아동 N명')
     if (r && r.term) { OCC.term = r.term; if (r.term.n) console.info('[종결 숨김] ' + r.term.n + '명', r.term.list); if (r.term.error) console.warn('[종결] 07 서류철 읽기 실패 — 아무도 안 숨김:', r.term.error); }
     schedRefresh();   // 월 스케줄 시트가 이미 떠 있으면(점유표가 늦게 도착) 격자를 채운다
@@ -4293,6 +4332,7 @@ function _fabShape() {
   var schedOn = document.getElementById('schedSheet').classList.contains('on');
   fab.classList.toggle('circle', schedOn);
   fab.classList.toggle('beside', schedOn);
+  document.getElementById('schedRouteBtn').classList.toggle('show', schedOn);   // 동선 버튼 = 시트가 열려 있을 때만(원과 같은 세로줄)
 }
 
 /* 월 스케줄 버튼 — 배치안 시트가 열려 있으면(원형 '스케줄' 상태) 배치안을 나가고, 어떤 상태든 시트를 연다
@@ -5573,6 +5613,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
              ["#7da6e6","#6394e1"],["#9e87e1","#9c85e0"],["#a8c872","#7ca03e"],["#79ca8a","#42a758"]];
   var NEUT = ["#eceff3","#b0b8c1"];   // 동을 모르는 아이(06에 행 없음 — 42% 실측) = 무채색. 거짓말 안 함
   var LIVE_DAYS = 56, SHAKE_MIN = 30, CLASH_TOL = 5, MOVE_DEFAULT = 12, PPH = 56;
+  window.LIVE_DAYS = LIVE_DAYS;   // 드롭다운 명수(_occChildCounts, 전역)도 같은 8주 컷을 쓴다 — 단일 소스
   var RL = [], DONGCOL = {}, DONGSEQ = [];
 
   function hh(m){ var h=Math.floor(m/60), x=m%60; return (h<10?'0':'')+h+':'+(x<10?'0':'')+x; }
