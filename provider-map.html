@@ -348,8 +348,9 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
            font-size:11px;font-weight:700;color:var(--g700);cursor:pointer;padding:4px 9px;
            border-radius:999px;white-space:nowrap;line-height:1.15;transition:color .22s}
   #schedSheet .svcseg button.on{color:var(--g900)}
-  #schedSheet .svcseg button.all{width:21px;padding:0;display:inline-flex;align-items:center;justify-content:center}
-  #schedSheet .svcseg button.all svg{width:14px;height:14px;display:block}
+  /* 새싹 = 16px 고정, 버튼 25px — PC·폰 동일(유성 09-09 "너무 작아짐, 모든 새싹 크기 같게, 살짝 커도 됨"). 미끄러지는 흰 필은 버튼 폭을 런타임에 재므로 크기와 무관 */
+  #schedSheet .svcseg button.all{width:25px;padding:0;display:inline-flex;align-items:center;justify-content:center}
+  #schedSheet .svcseg button.all svg{width:16px;height:16px;display:block;flex:none}
   /* 「전체」 = 흰 필 + 초록 새싹 (유성 09-03 — 그린 채움은 "과하다"). §4.5 솔리드 초록 금지를 지킨다 */
   #schedSheet .svcseg button.all.on{color:var(--green600)}
   #schedSheet .svcseg:not(.slide) button.on{background:#fff;box-shadow:0 1px 4px rgba(0,0,0,.10)}   /* 폭을 못 잰 순간의 폴백 */
@@ -1168,7 +1169,7 @@ s.onload=function(){window._kakaoSdkReady=true;_pf.push(['SDK 도착',performanc
 <!-- ════ 월 스케줄 논모달 (2026-08-16 정식 병합 — 프리뷰 6라운드 확정판) ════ -->
 <button id="schedPill" onclick="schedPillTap()"><span class="full"></span><span class="mini">스케줄</span></button>
 <!-- 「동선」 — 시트 밖(시트는 transform이라 fixed 자식이 화면에 고정되지 않는다). 후보 원 바로 위 -->
-<button id="schedRouteBtn" onclick="schedRouteToggle()">동선</button>
+<button id="schedRouteBtn" onclick="schedRouteToggle()" aria-pressed="false">동선</button>
 <div id="schedSheet">
   <div class="grab" id="schedGrab"><div class="bar"></div></div>
   <div class="shd">
@@ -5606,7 +5607,7 @@ function planCommit() {
    계획/기록은 펼쳤을 때 두 줄 나란히(블록 시각 = 기록).
    내부 헬퍼는 전부 클로저 — 전역 오염은 sched*·scTap·scFx·scFix 만([[gas-duplicate-global-function-collision]] 부류 예방).
    ════════════════════════════════════════════════════════════════════ */
-var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: false };
+var SCHED = { prov: null, openKey: null, openedAt: 0, route: false, folded: false, missWarned: false };   // openKey = 요일|아이(이름#생년)… — 인덱스가 아니라 아이로 기억한다(09-09 리뷰: 점유표 갱신·종결 뒤 재렌더에서 RL 순서가 바뀌면 다른 블록이 펼쳐졌다)
 (function(){
   var PALN = ['코랄','주황','노랑','민트','파랑','보라','연두','초록'];   // 배정 순서 = 유성 확정 08-15
   var PAL = [["#ee8a7a","#ea705d"],["#fbac6b","#ef7006"],["#ebc368","#bd8b19"],["#7dd1c1","#3aa490"],
@@ -5854,8 +5855,9 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
         var many=g.length>1, u=g[0], v=u.mem[0], p=palOf(v);
         var s0=g[0].s, eRaw=Math.max.apply(null,g.map(function(x){return x.e;})), e0=eRaw;
         if(GS[gi+1] && GS[gi+1][0].s < e0) e0 = GS[gi+1][0].s;   // 5분 이하 스침은 몇 px만 잘라 겹쳐 그리지 않는다
-        RL.push({g:g,d:d,end:eRaw});
-        var id=RL.length-1, op=(SCHED.open===id);
+        var key=d+'|'+g.map(function(x){ return x.mem.map(function(m){ return m.n+'#'+(m.dob||''); }).join('/'); }).join('+');
+        RL.push({g:g,d:d,end:eRaw,key:key});
+        var id=RL.length-1, op=(SCHED.openKey===key);
         var bh=Y(e0)-Y(s0);
         var upward = op && Y(s0) > H*0.5;
         var sty = upward ? ('bottom:'+(H-Y(e0))+'px;min-height:'+bh+'px;')
@@ -6256,7 +6258,11 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   window.addEventListener('resize', function(){ if (CAND.key) { candFit(); candFade(); } });
 
   // ── 전역 노출 (onclick·훅용) ──────────────────────────────────────
-  window.scTap = function(i){ SCHED.open = (SCHED.open===i? null : i); SCHED.openedAt = (SCHED.open===null) ? 0 : Date.now(); paint(); };
+  window.scTap = function(i){
+    var k = (RL[i] && RL[i].key) || null;
+    SCHED.openKey = (k && SCHED.openKey === k) ? null : k;
+    SCHED.openedAt = SCHED.openKey ? Date.now() : 0;
+    paint(); };
   window.scFx = function(i){
     var r = RL[i], k = gkey(r.d, r.g);
     if (CAND.key === k) { candClose(); paint(); return; }     // 같은 칸 두 번 = 닫기
@@ -6277,7 +6283,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     var v = RL[i].g[0].mem[mi||0], prov = SCHED.prov;
     if (!v.row) { showToast('이 서비스 탭 신청폼에 행이 없는 아이라 여기서는 종결할 수 없어요'); return; }
     iwConfirm(v.n + ' — ' + kind + '로 처리할까요?', '서류철 종결에 적고 ' + (prov||'') + ' 선생님 배정을 풀어요. 다시 신청하면 대기로 돌아와요.', kind + ' 처리', true, function(){
-      SCHED.open = null;
+      SCHED.openKey = null;
       var undo = _optimisticTerminate(prov, v.n, v.dob, v.row);
       if (!undo) showLoading(true);
       fetchGAS('terminate', { row: v.row, kind: kind, service: currentService, ctx: _ctxKeyName(), name: v.n }).then(function(res){
@@ -6302,7 +6308,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
     // 🔴 자동 오픈 폐기(유성 2026-08-24 "선택했을때 스케줄표가 바로 나와버리는데 아니야") —
     //    교사를 골라도 기본은 접힘(두 알약). 시트는 「○○님 월 스케줄」 버튼으로만 연다.
     if (SCHED.prov !== prov) {
-      SCHED.prov = prov; SCHED.open = null; SCHED.folded = true;
+      SCHED.prov = prov; SCHED.openKey = null; SCHED.folded = true;
       document.getElementById('schedSheet').classList.remove('on');
       schedRouteOff(); candClose();   // 교사가 바뀌면 그 자리 후보도 의미가 없다
     }
@@ -6319,7 +6325,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   window.schedFold = function(){
     schedRouteOff();   // 접으면 동선도 끈다 — pill과 요일 버튼이 같은 자리를 쓴다
     candClose();
-    SCHED.folded = true; SCHED.open = null;
+    SCHED.folded = true; SCHED.openKey = null;
     document.getElementById('schedSheet').classList.remove('on');
     schedPillShow();
   };
@@ -6341,7 +6347,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   window.schedRouteToggle = function(){
     if (SCHED.route) { schedRouteOff(); return; }
     SCHED.route = true; SCHED.missWarned = false;
-    document.getElementById('schedRouteBtn').classList.add('on');
+    document.getElementById('schedRouteBtn').classList.add('on'); document.getElementById('schedRouteBtn').setAttribute('aria-pressed','true');
     document.getElementById('planDays').classList.add('on');
     planDim(true);
     planDay('all');
@@ -6349,7 +6355,7 @@ var SCHED = { prov: null, open: null, route: false, folded: false, missWarned: f
   window.schedRouteOff = function(){
     if (!SCHED.route) return;
     SCHED.route = false;
-    document.getElementById('schedRouteBtn').classList.remove('on');
+    document.getElementById('schedRouteBtn').classList.remove('on'); document.getElementById('schedRouteBtn').setAttribute('aria-pressed','false');
     document.getElementById('planDays').classList.remove('on');
     planClear(); planDim(false);
   };
