@@ -123,6 +123,28 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
   border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0}
 .tfield.has-val .clr{display:flex}
 .tin-wrap .clr svg{width:7px;height:7px;color:#fff;display:block}
+/* 플로팅 라벨 (§4.1-14, 2026-09-08 유성 — 22 접수 폼 .field.fl 실코드 복제. 기본값 아님: 유성이 "§4.1-14로" 지시할 때만) */
+.fl-demo{display:flex;gap:28px;flex-wrap:wrap;align-items:flex-start}
+.fl-demo .col{flex:1 1 220px;max-width:300px}
+.fl-demo .fl{position:relative;height:70px;margin-bottom:8px}
+.fl-demo .fl>label{position:absolute;left:0;top:4px;margin:0;font-size:12.5px;font-weight:600;color:var(--g600);opacity:0;transform:translateY(8px);transition:opacity .18s,transform .18s,color .15s;pointer-events:none}
+.fl-demo .fl.up>label{opacity:1;transform:none}
+.fl-demo .fl:focus-within>label{color:var(--green)}
+.fl-demo .fl .inw{position:absolute;left:0;right:0;bottom:0;height:46px;display:flex;align-items:center;border-bottom:2px solid var(--g200);transition:border-color .15s}
+.fl-demo .fl:focus-within .inw{border-color:var(--green)}
+.fl-demo .fl .inw input{width:100%;height:100%;border:none;background:none;outline:none;font-family:inherit;font-size:18px;font-weight:600;color:var(--g900);padding:0 34px 0 0;caret-color:var(--green)}
+.fl-demo .fl .inw input::placeholder{color:var(--g500);font-weight:500}
+.fl-demo .fl .clr{position:absolute;right:0;top:50%;transform:translateY(-50%);width:15px;height:15px;border-radius:50%;background:var(--g300);border:none;display:none;align-items:center;justify-content:center;cursor:pointer;padding:0}
+.fl-demo .fl.has-val .clr{display:flex}
+.fl-demo .fl .clr svg{width:7px;height:7px;color:#fff;display:block}
+.fl-demo .grid{display:grid;grid-template-columns:1.12fr .88fr;gap:0 14px}
+.fl-demo .grid .fl{height:76px}
+.fl-demo .grid .fl>label{top:0;font-size:13px;line-height:20px}
+.fl-demo .grid .fl .inw{height:50px}
+.fl-demo .grid .lb{display:block;font-size:13px;line-height:20px;font-weight:600;color:var(--g600);margin:0 0 6px}
+.fl-demo .grid .opts{display:flex;gap:8px}
+.fl-demo .grid .opt{flex:1 1 0;height:50px;border:none;border-radius:14px;background:var(--g100);color:var(--g700);font:inherit;font-size:15px;font-weight:600;cursor:pointer}
+.fl-demo .grid .opt.on{background:var(--green500);color:#fff}
 /* 시각 입력 위젯 (§4.1-9 데모 — 근태 attend/index.html `twMount` 실코드 복제. 정본=그쪽) */
 .tw-ap{display:flex;gap:6px;background:var(--g100);border-radius:12px;padding:4px;margin-bottom:12px;max-width:320px}
 .tw-ap button{flex:1;border:0;border-radius:9px;padding:8px 0;font:inherit;font-size:14px;font-weight:600;background:transparent;color:var(--g500);cursor:pointer;transition:all .2s}
@@ -706,6 +728,19 @@ code{background:var(--g100);padding:1px 6px;border-radius:6px;font-size:.9em}
       <div class="help">번호를 다시 확인해 주세요</div></div>
   </div>
 
+  <p class="desc" style="margin-top:16px"><b>플로팅 라벨 = 예시가 곧 라벨인 짧은 칸 (§4.1-14, 유성 2026-09-08 확정 — 네이버 로그인 결)</b> — 기본은 위 라벨 없이 밑줄 칸 안에 예시 글자만. <b>커서가 들어오면</b>(값이 없어도) 그 글자가 위 작은 라벨로 올라오고 칸 안 예시는 사라진다(형식이 있는 칸은 형식으로 바뀜: 휴대폰 → 010-0000-0000). 비운 채 나가면 다시 내려온다. <b>칸 높이 고정</b>(라벨 자리를 늘 비워 둠 — 칸이 자라지 않는다). 오른쪽 = 옆에 선택 컨트롤이 있는 격자(1P 이름|성별): 필드 76px로 성별 라벨·버튼과 위·아래 줄을 맞춘다. <b>⚠️ 기본값 아님 — 유성이 "§4.1-14로" 지시할 때만.</b> 실코드 = 22 접수 폼 <code>.field.fl</code>.</p>
+  <div class="demo fl-demo">
+    <div class="col">
+      <div class="fl"><label>이름</label><div class="inw"><input placeholder="이름" data-ph-up=""><button class="clr" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
+      <div class="fl"><label>휴대폰 번호</label><div class="inw"><input inputmode="numeric" placeholder="휴대폰 번호" data-ph-up="010-0000-0000"><button class="clr" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
+      <div class="fl"><label>이메일</label><div class="inw"><input placeholder="이메일" data-ph-up=""><button class="clr" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
+    </div>
+    <div class="col grid">
+      <div class="fl"><label>이름</label><div class="inw"><input placeholder="이름" data-ph-up=""><button class="clr" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
+      <div><span class="lb">성별</span><div class="opts"><button class="opt" type="button">남자</button><button class="opt on" type="button">여자</button></div></div>
+      <div class="fl"><label>생년월일</label><div class="inw"><input inputmode="numeric" placeholder="생년월일" data-ph-up="0000. 00. 00"><button class="clr" tabindex="-1" aria-label="지우기"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button></div></div>
+    </div>
+  </div>
   <h3 class="sec">고정 길이 숫자 = 자동 다음 칸 이동 <span class="oldref">§4.1 · §4.2-9</span></h3>
   <p class="desc">자릿수가 딱 떨어지는 입력(전화 11·주민 7)은 다 채우면 <b>자동으로 다음 칸으로 이동</b>(키패드 유지)·마지막 칸은 키패드 닫기. 진보형=다음 칸이 그때 등장. <b>휴대폰 11자리 채워보세요 ↓</b></p>
   <div class="demo">
@@ -1113,6 +1148,15 @@ function wireField(f){
   if(clr) clr.addEventListener('click',()=>{inp.value='';f.classList.remove('has-val');inp.focus();});
 }
 document.querySelectorAll('.tfield').forEach(wireField);
+// ── §4.1-14 플로팅 라벨 (22 접수 폼 wireFloat 복제) ──
+document.querySelectorAll('.fl-demo .fl').forEach(function(fd){ var inp=fd.querySelector('input'), clr=fd.querySelector('.clr'), base=inp.getAttribute('placeholder');
+  function up(on){ fd.classList.toggle('up', on); inp.setAttribute('placeholder', on ? (inp.dataset.phUp||'') : base); }
+  inp.addEventListener('focus', function(){ up(true); });
+  inp.addEventListener('blur', function(){ up(inp.value.length>0); });
+  inp.addEventListener('input', function(){ fd.classList.toggle('has-val', inp.value.length>0); up(inp.value.length>0 || document.activeElement===inp); });
+  if(clr) clr.addEventListener('click', function(){ inp.value=''; fd.classList.remove('has-val'); inp.focus(); });
+});
+document.querySelectorAll('.fl-demo .opt').forEach(function(b){ b.addEventListener('click', function(){ b.parentElement.querySelectorAll('.opt').forEach(function(x){ x.classList.remove('on'); }); b.classList.add('on'); }); });
 
 // ── §4.1-9 입력 관용(밖에서 읽어 온 표기 그대로) — 근태 `twMount` 판정 규칙 복제. 정본=attend/index.html ──
 (function(){
